@@ -1,9 +1,14 @@
+
 # compiled output
 /dist
 /node_modules
+/migrations
 
-# env
-.env
+# envs
+.env.development
+.env.test
+.env.production
+.env.local
 
 # Logs
 logs
