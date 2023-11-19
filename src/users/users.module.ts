@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 
 // models
 import { SettingsModule } from '../settings/settings.module';
+import { SubscriptionsModule } from 'src/subscriptions/subscriptions.module';
 
 // controllers
 import { UsersController } from './users.controller';
@@ -15,9 +16,13 @@ import { UsersService } from './users.service';
 import { User } from './user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), SettingsModule],
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    SettingsModule,
+    SubscriptionsModule,
+  ],
   controllers: [UsersController],
-  providers: [UsersService, JwtService, SettingsModule],
+  providers: [UsersService, JwtService, SettingsModule, SubscriptionsModule],
   exports: [UsersService],
 })
 export class UsersModule {}

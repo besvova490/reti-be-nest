@@ -1,4 +1,4 @@
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 
 export class UserDto {
   @Expose()
@@ -21,4 +21,12 @@ export class UserDto {
 
   @Expose()
   createdAt: Date;
+
+  @Expose()
+  @Transform(
+    ({ obj }) =>
+      obj.favoriteEvents?.map((item) => ({ id: item.id, name: item.name })) ||
+      [],
+  )
+  favoriteEvents: { id: number; name: string }[];
 }

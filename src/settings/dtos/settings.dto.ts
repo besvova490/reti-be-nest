@@ -1,6 +1,9 @@
 import { Expose } from 'class-transformer';
 
-export class CreateSettingsDto {
+export class SettingsDto {
+  @Expose()
+  readonly id: number;
+
   @Expose()
   readonly receiveWeeklyEmails: boolean;
 

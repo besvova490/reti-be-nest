@@ -1,8 +1,18 @@
-import { Entity, Column, OneToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  OneToOne,
+  JoinColumn,
+  ManyToOne,
+  ManyToMany,
+  OneToMany,
+} from 'typeorm';
 
 // entities
 import { AbstractEntity } from '../entity/abstract.entity';
 import { Settings } from '../settings/settings.entity';
+import { Subscription } from '../subscriptions/subscription.entity';
+import { Event } from '../events/event.entity';
 
 @Entity()
 export class User extends AbstractEntity {
@@ -27,7 +37,19 @@ export class User extends AbstractEntity {
   @Column({ default: true })
   isActive: boolean;
 
-  @OneToOne(() => User, (user) => user.settings, { onDelete: 'CASCADE' })
+  @OneToOne(() => Settings, { cascade: true })
   @JoinColumn()
   settings: Settings;
+
+  @ManyToOne(() => Subscription, (subscription) => subscription.users)
+  subscription: Subscription;
+
+  @OneToMany(() => Event, (event) => event.author)
+  myEvents: Event[];
+
+  @ManyToMany(() => Event, (event) => event.isFavorite)
+  favoriteEvents: Event[];
+
+  @ManyToMany(() => Event, (event) => event.guests)
+  events: Event[];
 }
