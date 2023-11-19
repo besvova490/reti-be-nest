@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { randomBytes } from 'crypto';
@@ -50,19 +50,47 @@ export class EventsService {
 
     return data.map((event) => ({
       ...event,
-      isFavorite: event?.isFavorite.some((item) => item.id === user.id),
+      isFavorite: event.isFavorite?.some((item) => item.id === user.id),
     }));
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} event`;
+  async findOne(id: number) {
+    const data = await this.repo
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.guests', 'guests')
+      .leftJoinAndSelect('event.author', 'author')
+      .where({ id })
+      .getOne();
+
+    return data;
   }
 
-  update(id: number, data: UpdateEventDto) {
-    return `This action updates a #${id} event ${data}`;
+  async update(id: number, data: UpdateEventDto) {
+    const event = await this.findOne(id);
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    const guests = data.guests?.length
+      ? await this.usersService.findByEmails(data.guests)
+      : [];
+    event.guests = [...guests, event.author];
+    event.isFavorite = data.isFavorite && [event.author];
+
+    return this.repo.save({
+      ...data,
+      ...event,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} event`;
+  async remove(id: number) {
+    const event = this.findOne(id);
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return this.repo.delete(id);
   }
 }

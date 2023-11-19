@@ -23,15 +23,25 @@ export class EventDto {
   readonly status: EventStatus;
 
   @Expose()
-  @Transform(({ obj }) =>
-    obj.guests.map((guest) => ({
-      id: guest.id,
-      email: guest.email,
-      firstName: guest.firstName,
-      lastName: guest.lastName,
-    })),
+  @Transform(
+    ({ obj }) =>
+      obj.guests?.map((guest) => ({
+        id: guest.id,
+        email: guest.email,
+        firstName: guest.firstName,
+        lastName: guest.lastName,
+      })),
   )
   readonly guests: string[];
+
+  @Expose()
+  @Transform(({ obj }) => ({
+    id: obj.author?.id,
+    email: obj.author?.email,
+    firstName: obj.author?.firstName,
+    lastName: obj.author?.lastName,
+  }))
+  readonly author: string[];
 
   @Expose()
   readonly isFavorite: boolean;
