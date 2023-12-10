@@ -37,6 +37,12 @@ export class User extends AbstractEntity {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ default: false })
+  isTwoFactorAuthEnabled: boolean;
+
+  @Column({ nullable: true })
+  twoFactorAuthSecret: string;
+
   @OneToOne(() => Settings, { cascade: true })
   @JoinColumn()
   settings: Settings;

@@ -21,6 +21,14 @@ export class UpdateUserDto {
   @IsOptional()
   readonly logo: string;
 
+  @IsString()
+  @IsOptional()
+  readonly twoFactorAuthSecret: string;
+
+  @IsString()
+  @IsOptional()
+  readonly isTwoFactorAuthEnabled: boolean;
+
   @IsTimeZone()
   @IsOptional()
   readonly timeZone: string;

@@ -2,21 +2,19 @@ import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
-  UseGuards,
 } from '@nestjs/common';
 import { scrypt as _scrypt, randomBytes } from 'crypto';
 import { promisify } from 'util';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-
-// guards
-import { RefreshTokenGuard } from './guards/refreshToken.guard';
+import * as speakeasy from 'speakeasy';
 
 // services
 import { UsersService } from '../users/users.service';
 
 // dtos
 import { CreateUserDto } from '../users/dtos/create-user.dto';
+import { UpdateUserDto } from 'src/users/dtos/update-user.dto';
 
 // entities
 import { User } from '../users/user.entity';
@@ -43,7 +41,7 @@ export class AuthService {
     const userCheck = await this.usersService.findOne({ email: data.email });
 
     if (userCheck) {
-      throw new BadRequestException('email in use');
+      throw new BadRequestException({ errors: { email: 'email in use' } });
     }
 
     const [hashedPassword] = await passwordToHash(data.password);
@@ -69,10 +67,13 @@ export class AuthService {
       throw new BadRequestException('invalid credentials');
     }
 
+    if (user.isTwoFactorAuthEnabled) {
+      return { isTwoFactorAuthEnabled: user.isTwoFactorAuthEnabled };
+    }
+
     return this.getTokens(user.id, user.email);
   }
 
-  @UseGuards(RefreshTokenGuard)
   async refresh(refreshToken: string) {
     try {
       const data = await this.jwtService.verifyAsync(refreshToken, {
@@ -90,7 +91,76 @@ export class AuthService {
     }
   }
 
-  async getTokens(id: number, email: string) {
+  // TODO move all two-factor logic to a separate service
+  async twoFactor(user: User) {
+    if (user.isTwoFactorAuthEnabled) {
+      throw new BadRequestException('two-factor auth is already enabled');
+    }
+
+    const secret = speakeasy.generateSecret({
+      name: `Rate it: ${user.email}`,
+      length: 20,
+    });
+
+    await this.usersService.update(user.id, {
+      twoFactorAuthSecret: secret.base32,
+    } as UpdateUserDto);
+
+    return { token: secret.otpauth_url };
+  }
+
+  async twoFactorConfirm(user: User, twoFactorCode: string) {
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFactorAuthSecret,
+      encoding: 'base32',
+      token: twoFactorCode,
+    });
+
+    if (!verified) {
+      throw new BadRequestException('invalid two-factor code');
+    }
+
+    await this.usersService.update(user.id, {
+      isTwoFactorAuthEnabled: true,
+    } as UpdateUserDto);
+
+    return;
+  }
+
+  async twoFactorRemove(user: User) {
+    await this.usersService.update(user.id, {
+      isTwoFactorAuthEnabled: false,
+      twoFactorAuthSecret: null,
+    } as UpdateUserDto);
+
+    return;
+  }
+
+  async twoFactorVerifier(email: string, twoFactorCode: string) {
+    const userRepo = await this.usersService.findOne({ email });
+
+    if (!userRepo) {
+      throw new BadRequestException('invalid email');
+    }
+
+    if (!userRepo.isTwoFactorAuthEnabled) {
+      throw new BadRequestException('two-factor auth is not enabled');
+    }
+
+    const verified = speakeasy.totp.verify({
+      secret: userRepo.twoFactorAuthSecret,
+      encoding: 'base32',
+      token: twoFactorCode,
+    });
+
+    if (!verified) {
+      throw new BadRequestException('invalid two-factor code');
+    }
+
+    return this.getTokens(userRepo.id, userRepo.email);
+  }
+
+  private async getTokens(id: number, email: string, expiresIn?: string) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
@@ -99,9 +169,9 @@ export class AuthService {
         },
         {
           secret: this.configService.getOrThrow('NEST_JWT_ACCESS_SECRET'),
-          expiresIn: this.configService.getOrThrow(
-            'NEST_JWT_ACCESS_EXPIRATION_TIME',
-          ),
+          expiresIn:
+            expiresIn ||
+            this.configService.getOrThrow('NEST_JWT_ACCESS_EXPIRATION_TIME'),
         },
       ),
       this.jwtService.signAsync(

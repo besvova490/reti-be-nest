@@ -17,6 +17,9 @@ export class UserDto {
   logo: string;
 
   @Expose()
+  isTwoFactorAuthEnabled: boolean;
+
+  @Expose()
   timeZone: string;
 
   @Expose()
