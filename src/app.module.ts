@@ -6,6 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { SocketModule } from './socket/socket.module';
 
 // middlewares
 import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
@@ -22,6 +23,7 @@ import { EventsModule } from './events/events.module';
     SettingsModule,
     SubscriptionsModule,
     EventsModule,
+    SocketModule,
   ],
   providers: [JwtService],
 })

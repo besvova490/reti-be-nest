@@ -1,4 +1,10 @@
-import { IsEmail, IsString, IsTimeZone, IsOptional } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  IsTimeZone,
+  IsOptional,
+  IsBoolean,
+} from 'class-validator';
 
 export class UpdateUserDto {
   @IsEmail()
@@ -25,7 +31,7 @@ export class UpdateUserDto {
   @IsOptional()
   readonly twoFactorAuthSecret: string;
 
-  @IsString()
+  @IsBoolean()
   @IsOptional()
   readonly isTwoFactorAuthEnabled: boolean;
 

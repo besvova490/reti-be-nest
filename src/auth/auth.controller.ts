@@ -17,7 +17,6 @@ import { User } from '../users/user.entity';
 
 // guards
 import { AuthGuard } from './guards/auth.guard';
-import { RefreshTokenGuard } from './guards/refreshToken.guard';
 
 // interceptors
 import { Serialize } from '../interceptors/serialize.interceptor';
@@ -37,7 +36,6 @@ export class AuthController {
     return this.authService.signIn(body.email, body.password);
   }
 
-  @UseGuards(RefreshTokenGuard)
   @Post('/refresh')
   refresh(@Body() body: { refreshToken: string }) {
     return this.authService.refresh(body.refreshToken);

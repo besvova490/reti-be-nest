@@ -86,7 +86,8 @@ export class AuthService {
         accessToken: tokens.accessToken,
         refreshToken,
       };
-    } catch {
+    } catch (error) {
+      console.log(error);
       throw new UnauthorizedException('Access Denied');
     }
   }
