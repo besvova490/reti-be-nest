@@ -9,11 +9,18 @@ import {
 import { Socket } from 'socket.io';
 
 // services
+import { MessageService } from '../../messages/messages.service';
 import { SocketService } from './socket.service';
 
-@WebSocketGateway()
+// helpers
+import * as events from './events';
+
+@WebSocketGateway({ cors: true })
 export class SocketGateway implements OnGatewayConnection {
-  constructor(private socketService: SocketService) {}
+  constructor(
+    private socketService: SocketService,
+    private messageService: MessageService,
+  ) {}
 
   @WebSocketServer()
   private server: Socket;
@@ -22,11 +29,37 @@ export class SocketGateway implements OnGatewayConnection {
     this.socketService.handleConnection(socket);
   }
 
-  @SubscribeMessage('message')
-  handleMessage(
+  @SubscribeMessage(events.JOIN_ROOM)
+  async handleMessage(
     @MessageBody() data: string,
     @ConnectedSocket() client: Socket,
   ) {
-    this.server.emit('message', '123');
+    client.join(data);
+  }
+
+  @SubscribeMessage(events.LEAVE_ROOM)
+  handleLeaveRoom(
+    @MessageBody() data: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.leave(data);
+  }
+
+  @SubscribeMessage(events.MESSAGE)
+  handleMessageEvent(
+    @MessageBody() data: { content: string; to: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    this.messageService.create({
+      content: data.content,
+      from: JSON.stringify(client.handshake.auth),
+      roomId: data.to,
+      createdAt: new Date(),
+    });
+
+    this.server.to(data.to).emit(events.MESSAGE, {
+      content: data.content,
+      from: client.handshake.auth,
+    });
   }
 }

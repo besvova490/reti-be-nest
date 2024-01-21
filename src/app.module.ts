@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { MongooseModule } from '@nestjs/mongoose';
 
 // models
 import { DatabaseModule } from './database/database.module';
@@ -13,10 +14,12 @@ import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
 import { SettingsModule } from './settings/settings.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { EventsModule } from './events/events.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    MongooseModule.forRoot(process.env.MEST_MONGO_URL),
     DatabaseModule,
     UsersModule,
     AuthModule,
@@ -24,6 +27,7 @@ import { EventsModule } from './events/events.module';
     SubscriptionsModule,
     EventsModule,
     SocketModule,
+    MessagesModule,
   ],
   providers: [JwtService],
 })
