@@ -1,5 +1,8 @@
 import { IsString, IsEmail, IsBoolean, IsOptional } from 'class-validator';
 
+// helpers
+import { IsDateValid } from 'src/helpers/is-date-validator';
+
 export class CreateEventDto {
   @IsString()
   readonly name: string;
@@ -7,7 +10,9 @@ export class CreateEventDto {
   @IsString()
   readonly description: string;
 
-  @IsString()
+  @IsDateValid('YYYY-MM-DD:HH:MM', {
+    message: 'Date must be in format YYYY-MM-DD:HH:MM',
+  })
   readonly date: string;
 
   @IsEmail({}, { each: true })

@@ -7,6 +7,9 @@ import { Settings } from '../settings/settings.entity';
 import { Subscription } from '../subscriptions/subscription.entity';
 import { Event } from '../events/event.entity';
 
+// subscribers
+import { EventsSubscriber } from 'src/events/events.subscriber';
+
 export function databaseConfig(
   configService: ConfigService,
 ): DataSourceOptions {
@@ -17,6 +20,7 @@ export function databaseConfig(
         url: configService.getOrThrow('NEST_DATABASE_URL'),
         synchronize: true,
         entities: [User, Settings, Subscription, Event],
+        subscribers: [EventsSubscriber],
       } as DataSourceOptions;
     default:
       return {} as DataSourceOptions;

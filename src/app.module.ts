@@ -15,6 +15,7 @@ import { SettingsModule } from './settings/settings.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { EventsModule } from './events/events.module';
 import { MessagesModule } from './messages/messages.module';
+import { RollbackModule } from './rollback/rollback.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { MessagesModule } from './messages/messages.module';
     EventsModule,
     SocketModule,
     MessagesModule,
+    RollbackModule,
   ],
   providers: [JwtService],
 })

@@ -78,19 +78,16 @@ export class EventsService {
     event.guests = [...guests, event.author];
     event.isFavorite = data.isFavorite && [event.author];
 
-    return this.repo.save({
-      ...data,
-      ...event,
-    });
+    return this.repo.save(Object.assign(event, data));
   }
 
   async remove(id: number) {
-    const event = this.findOne(id);
+    const event = await this.findOne(id);
 
     if (!event) {
       throw new NotFoundException('Event not found');
     }
 
-    return this.repo.delete(id);
+    return this.repo.remove(event);
   }
 }
